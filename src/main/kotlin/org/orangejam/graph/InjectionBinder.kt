@@ -23,7 +23,7 @@ import tiktok.knit.plugin.injection.method
 
 // Copied from asm-plugin, but modified to allow multiple binding (for graph analysis)
 
-//typealias ComponentMultiInjections = MutableMap<FuncName, Set<Injection>>
+//typealias ComponentMultiInjections = MutableMap<FuncName, List<Injection>>
 
 object InjectionBinder {
     private val injectionFactories: Array<InjectionFactory> = arrayOf(
@@ -69,7 +69,7 @@ object InjectionBinder {
         factoryContext: InjectionFactoryContext,
     ): ComponentInjections {
         val injectionMap = hashMapOf<FuncName, Injection>()
-//        val injectionMap = hashMapOf<FuncName, Set<Injection>>() // Multimap for multiple binding
+//        val injectionMap = hashMapOf<FuncName, List<Injection>>() // Multimap for multiple binding
         val injectedGetters = component.injectedGetters
         val allProvides = CPF.all(component, true) + globalContainer.all
         for (injectedGetter in injectedGetters) {
@@ -77,16 +77,20 @@ object InjectionBinder {
             val allProvidesForSingleInjection = allProvides.ignoreItSelfWithParent(injectedGetter)
             val findingContext = FindInjectionContext(
                 factoryContext, component,
-                fieldType, allProvidesForSingleInjection, false,
+                fieldType, allProvidesForSingleInjection, true,
             )
             val injections = buildInjectionFrom(findingContext)
-//            injectionMap[funcName] = injections.map { it.getOrThrow() }.toSet()
-
-            injectionMap[funcName] = injections.exactSingleInjection(
-                component, fieldType,
-            ) {
-                CPF.all(component, true).map { it.method }
-            }.getOrThrow()
+            injectionMap[funcName] = injections.first().getOrNull()!! // FOR testing
+//            injectionMap[funcName] = injections.exactSingleInjection(
+//                component, fieldType,
+//            ) {
+//                CPF.all(component, true).map { it.method }
+//            }.getOrThrow()
+//            injections.exactSingleInjection(
+//                component, fieldType,
+//            ) {
+//                CPF.all(component, true).map { it.method }
+//            }.getOrThrow()
         }
         return injectionMap
     }

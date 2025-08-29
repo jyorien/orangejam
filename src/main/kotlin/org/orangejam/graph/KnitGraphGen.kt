@@ -5,7 +5,9 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.ClassNode
 import tiktok.knit.plugin.MetadataContainer
 import tiktok.knit.plugin.asMetadataContainer
+import tiktok.knit.plugin.element.BoundCompositeComponent
 import tiktok.knit.plugin.element.ComponentClass
+import tiktok.knit.plugin.element.ProvidesMethod
 import tiktok.knit.plugin.injection.Injection
 import java.io.File
 import java.io.FileInputStream
@@ -60,6 +62,45 @@ private fun nodeLabel(n: Node): String = when (n) {
     is Node.ProviderMethod -> "${n.functionName}${n.signature}"
 }
 
+private fun attachInjectionTree(
+    fieldVertex: Vertex<Node>,
+    root: Injection,
+    internVertex: (Node) -> Vertex<Node>,
+    addEdge: (Edge<Node>) -> Unit
+) {
+    val q: ArrayDeque<Pair<Vertex<Node>, Injection>> = ArrayDeque()
+    val seen = HashSet<String>() // avoid infinite loops on cycles
+
+    fun key(pm: ProvidesMethod) = "${pm.containerClass}#${pm.functionName}:${pm.descWithReturnType()}"
+
+    q.add(fieldVertex to root)
+
+    while (q.isNotEmpty()) {
+        val (parentVertex, inj) = q.removeFirst()
+
+        val pm = inj.providesMethod
+        if (!seen.add(key(pm))) continue
+
+        val providerVertex = internVertex(
+            Node.ProviderMethod(
+                containerClass = pm.containerClass,
+                functionName   = pm.functionName,
+                signature      = pm.descWithReturnType()
+            )
+        )
+
+        if (providerVertex != parentVertex) {
+            // Provider -> parent (parent is either the field, or an upstream provider)
+            addEdge(Edge(source = providerVertex, destination = parentVertex))
+        }
+
+        // Recurse into requirements: they will point to this provider
+        inj.requirementInjections.forEach { child ->
+            q.add(providerVertex to child)
+        }
+    }
+}
+
 /**
  *  We just parse the GraphContext into simple Dependency Graph structure here
  */
@@ -78,7 +119,30 @@ fun parseDependencyGraph(
     }
 
     context.boundComponentMap.forEach { (klassName, v) ->
-        v.injections?.forEach { (field, injection) ->
+//        v.injections?.filter { (_, injection) -> injection.from == Injection.From.COMPOSITE }?.forEach { (field, injection) ->
+//            val injectionField = Node.InjectionField(klassName, field)
+//            val injectionFieldVertex = internVertex(injectionField)
+//
+//            val q: Queue<Pair<Vertex<Node>, Injection>> = LinkedList()
+//            // Just simple bfs to collect all the injections
+//            q.add(injectionFieldVertex to injection)
+//
+//            while(q.isNotEmpty()) {
+//                val (parentVertex, injection) = q.poll()
+//
+//                // Create node
+//                val pm = injection.providesMethod
+//                val provider = Node.ProviderMethod(pm.containerClass, pm.functionName, pm.descWithReturnType())
+//                val providerVertex = internVertex(provider)
+//
+//                //Link node
+//                if(providerVertex != parentVertex)edges += Edge(source = providerVertex, destination = parentVertex)
+//
+//                q.addAll(injection.requirementInjections.map { providerVertex to it })
+//            }
+//
+//        }
+        v.injections?.filter { (_, injection) -> injection.from == Injection.From.SELF }?.forEach { (field, injection) ->
 
             val injectionField = Node.InjectionField(klassName, field)
             val injectionFieldVertex = internVertex(injectionField)

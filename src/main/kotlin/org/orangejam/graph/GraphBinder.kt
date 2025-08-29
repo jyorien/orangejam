@@ -23,26 +23,31 @@ import tiktok.knit.plugin.element.ProvidesMethod
 import tiktok.knit.plugin.element.attach2BoundMapping
 import tiktok.knit.plugin.fqn
 import tiktok.knit.plugin.globalProvidesInternalName
+import tiktok.knit.plugin.injection.ComponentInjections
 import tiktok.knit.plugin.injection.GlobalInjectionContainer
 import tiktok.knit.plugin.writer.ComponentWriter
 import tiktok.knit.plugin.writer.GlobalProvidesWriter
 import java.io.File
 import kotlin.collections.iterator
 
-class GraphBoundComponentClass(
-    internalName: InternalName,
-    parents: List<BoundCompositeComponent>,
-    typeParams: List<KnitGenericType>,
-    provides: List<ProvidesMethod>,
-    compositeComponents: Map<PropAccName, BoundCompositeComponent>, // property access name -> component
-    injectedGetters: List<InjectedGetter>,
-    singletons: List<KnitSingleton>,
-    isInterface: Boolean,
-) {
-    val boundComponent = BoundComponentClass(internalName, parents, typeParams, provides, compositeComponents, injectedGetters, singletons, isInterface)
-
-}
-typealias GraphBoundComponentMapping = MutableMap<InternalName, GraphBoundComponentClass>
+//class GraphBoundComponentClass(
+//    val boundComponentClass: BoundComponentClass
+//) {
+//    val internalName: InternalName get() = boundComponentClass.internalName
+//    val parents: List<BoundCompositeComponent> get() = boundComponentClass.parents
+//    val typeParams: List<KnitGenericType> get() = boundComponentClass.typeParams
+//    val provides: List<ProvidesMethod> get() = boundComponentClass.provides
+//    val compositeComponents: Map<PropAccName, BoundCompositeComponent> get() = boundComponentClass.compositeComponents // property access name -> component
+//    val injectedGetters: List<InjectedGetter> get() = boundComponentClass.injectedGetters
+//    val singletons: List<KnitSingleton> get() = boundComponentClass.singletons
+//    val isInterface: Boolean get() = boundComponentClass.isInterface
+//
+//    var injections: ComponentMultiInjections? = null
+//}
+//
+//fun BoundComponentClass.toGraphBoundComponentClass(): GraphBoundComponentClass {
+//    return GraphBoundComponentClass(this)
+//}
 
 // GraphContext class is copied from the knit-asm module with all the necessary functions - zi heng
 
@@ -78,6 +83,8 @@ class GraphContext(
             val injections = InjectionBinder.buildInjectionsForComponent(
                 bound, context.globalInjectionContainer, inheritJudgement,
             )
+//            val graphBound = bound.toGraphBoundComponentClass()
+//            graphBound.injections = injections
             bound.injections = injections
             boundComponentMap[component.internalName] = bound
         }

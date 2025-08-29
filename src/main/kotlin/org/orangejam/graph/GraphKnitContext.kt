@@ -5,9 +5,9 @@ import tiktok.knit.plugin.InternalName
 import tiktok.knit.plugin.element.ComponentClass
 import tiktok.knit.plugin.injection.GlobalInjectionContainer
 
-interface GraphKnitContext {
-    val componentMap: MutableMap<InternalName, ComponentClass>
-    val boundComponentMap: MutableMap<InternalName, GraphBoundComponentClass>
-    val globalInjectionContainer: GlobalInjectionContainer
-    val inheritJudgement: InheritJudgement
-}
+//interface GraphKnitContext {
+//    val componentMap: MutableMap<InternalName, ComponentClass>
+//    val graphBoundComponentMap: MutableMap<InternalName, GraphBoundComponentClass>
+//    val globalInjectionContainer: GlobalInjectionContainer
+//    val inheritJudgement: InheritJudgement
+//}
