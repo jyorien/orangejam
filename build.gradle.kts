@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
-group = "com.example"
+group = "org.orangejam"
 version = "1.0-SNAPSHOT"
 
 repositories {
