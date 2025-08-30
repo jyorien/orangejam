@@ -1,33 +1,70 @@
-# Orangejam
+# Orange Jam
 
-This is our submission for the 5th problem statement "5. Visualising Architecture with Knit". We built it as an Intellij plugin, so that it can integrate with existing projects that use Knit.
+**Orange Jam** is our submission for Problem Statement 5: *Visualising Architecture with Knit*. We built it as an IntelliJ plugin to seamlessly integrate with projects that use TikTok’s [Knit](https://github.com/tiktok/knit), offering developers instant insight into their dependency structure — all without leaving the IDE.
 
-## How to use
+---
 
-- Clone the repository, open in IDEA, run it with the Jetbrains Runtime (jbr), to open a sandboxed editor with the plugin installed. Then open a project that uses knit.
-  - Use the side bar to select the knit module, and click generate to see the graph
-  - Right click the gradle module to open the context menu to visualize the module graph
-  - For a given provider/consumer, gutter functions will appear in line, click on them to see either the relevant dependency subgraph, or the providers for a consumer
+## 🔧 How to Use
 
-## Relevant problem statement
+1. **Clone this repository** and open it in IntelliJ IDEA.
+2. **Run the plugin** using the JetBrains Runtime (jbr) to launch a sandboxed IntelliJ instance with the plugin pre-installed.
+3. **Open a Kotlin project that uses Knit** and:
+   - Use the **sidebar** to select a Knit module and click *Generate* to view the dependency graph.
+   - **Right-click** a Gradle module to access a context menu and generate the module-level graph.
+   - Use the **editor gutter icons** to:
+     - Jump directly to a *provider* from a consumer.
+     - Visualize a *focused subgraph* showing only relevant dependencies.
 
-The goal of this project is to make projects that use Knit have more visibility into the dependency relationships in the project. We do this entirely within the editor for seamless integration with the developer workflow
+---
 
-## Technical write up
+## 🎯 Problem Statement
 
-Given an open project, we look through to find modules that uses the `tiktok.knit` dependency. For a project that uses the dependency, we then analyze it to produce a dependency graph.
+Knit is a compile-time dependency injection framework, but understanding how modules and classes are wired together can be difficult from code alone.
 
-We read compiled class files with ASM and use Knit internal `InjectionBinder` mechanism to produce a dependency graph. The dependency graph can then be easily traverse using `Graph` class and allow for further analysis.  We then compiled the dependency graph into `.dot` to render as `.png` files. These would then be displayed within the editor.
+Orange Jam solves this by:
+- Visualizing the full DI graph inside the editor.
+- Highlighting how classes depend on each other.
+- Allowing developers to navigate directly from the graph to the relevant code.
 
-Given the dependency graph, we can then compute useful features like jumping to the provider of a given `by di` consumer. We can also slice the graph into a subgraph to show the developer a visualization of the relevant dependencies related to the class that is being worked on.
+---
 
-## Features and functionalities
+## 🛠️ Technical Overview
 
-- Visualize a module's dependency graph as a context menu / side bar toggle within the editor
-- Visualize a subgraph of only the relevant components related to the Provider/Consumer as an inline editor gutter
-- Jump to provider as an inline editor gutter
+When a Knit project is opened, Orange Jam:
 
-## Libraries used
+1. **Scans the project** for modules that include the `tiktok.knit` dependency.
+2. **Reads compiled `.class` files** using [ASM](https://asm.ow2.io/) and extracts dependency information via Knit’s `InjectionBinder`.
+3. **Constructs a dependency graph** and exports it to `.dot` format.
+4. **Renders the graph** as an SVG or PNG using Graphviz, displayed inside IntelliJ using JCEF.
 
-- Graphviz
-- Intellij Plugin SDK
+With this graph, we enable:
+- Clickable nodes to jump directly to classes or methods.
+- Focused subgraphs for specific classes.
+- Seamless integration into the IDE via gutters and context menus.
+
+---
+
+## ✨ Features
+
+- Module graph generation from the sidebar or context menu.
+- Click on nodes in tool window graph to navigate to the corresponding method
+- Focused subgraphs for a given provider/consumer class.
+- Gutter icons for jumping to providers or visualizing relevant dependencies.
+- No source code modifications required — all analysis is done via compiled bytecode.
+
+---
+
+## 📚 Libraries & Tools Used
+
+- [Graphviz](https://graphviz.org/) - graph rendering
+- [ASM](https://asm.ow2.io/) - bytecode analysis
+- [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/welcome.html) - plugin development
+
+---
+
+## 🧪 Limitations
+
+- 🐢 The plugin requires the project to be built before it can generate graphs. For large codebases, slow builds may hinder seamless usage.
+- 🔀 Cross-class method navigation is not yet supported. Clicking on a method in the graph currently works only within the same class.
+
+---
