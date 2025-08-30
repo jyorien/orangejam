@@ -5,7 +5,6 @@ import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.ClassNode
 import tiktok.knit.plugin.MetadataContainer
 import tiktok.knit.plugin.asMetadataContainer
-import tiktok.knit.plugin.element.BoundCompositeComponent
 import tiktok.knit.plugin.element.ComponentClass
 import tiktok.knit.plugin.element.ProvidesMethod
 import tiktok.knit.plugin.injection.Injection
@@ -101,6 +100,8 @@ private fun attachInjectionTree(
     }
 }
 
+
+
 /**
  *  We just parse the GraphContext into simple Dependency Graph structure here
  */
@@ -119,29 +120,29 @@ fun parseDependencyGraph(
     }
 
     context.boundComponentMap.forEach { (klassName, v) ->
-//        v.injections?.filter { (_, injection) -> injection.from == Injection.From.COMPOSITE }?.forEach { (field, injection) ->
-//            val injectionField = Node.InjectionField(klassName, field)
-//            val injectionFieldVertex = internVertex(injectionField)
-//
-//            val q: Queue<Pair<Vertex<Node>, Injection>> = LinkedList()
-//            // Just simple bfs to collect all the injections
-//            q.add(injectionFieldVertex to injection)
-//
-//            while(q.isNotEmpty()) {
-//                val (parentVertex, injection) = q.poll()
-//
-//                // Create node
-//                val pm = injection.providesMethod
-//                val provider = Node.ProviderMethod(pm.containerClass, pm.functionName, pm.descWithReturnType())
-//                val providerVertex = internVertex(provider)
-//
-//                //Link node
-//                if(providerVertex != parentVertex)edges += Edge(source = providerVertex, destination = parentVertex)
-//
-//                q.addAll(injection.requirementInjections.map { providerVertex to it })
-//            }
-//
-//        }
+        v.injections?.filter { (_, injection) -> injection.from == Injection.From.COMPOSITE }?.forEach { (field, injection) ->
+            val fieldVertex = internVertex(Node.InjectionField(klassName, field))
+            val pm = injection.providesMethod
+
+            val records = v.getCompositeRecords()
+            val pathsToProvider = records.get(pm.containerClass)
+
+            val providerVertex = internVertex(Node.ProviderMethod(pm.containerClass, pm.functionName, pm.desc))
+
+            for (rec in pathsToProvider) {
+                var prev = providerVertex
+                val hops = rec.steps
+
+                for (hop in hops.asReversed()) {
+                    val viaOwnerVertex = internVertex(Node.ProviderMethod(hop.ownerClass, hop.propName, pm.desc))
+                    edges += Edge(source = prev, destination = viaOwnerVertex)
+                    prev = viaOwnerVertex
+                }
+
+                edges += Edge(source = prev, destination = fieldVertex)
+            }
+
+        }
         v.injections?.filter { (_, injection) -> injection.from == Injection.From.SELF }?.forEach { (field, injection) ->
 
             val injectionField = Node.InjectionField(klassName, field)
