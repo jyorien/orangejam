@@ -17,7 +17,7 @@ The goal of this project is to make projects that use Knit have more visibility 
 
 Given an open project, we look through to find modules that uses the `tiktok.knit` dependency. For a project that uses the dependency, we then analyze it to produce a dependency graph.
 
-We analyze by ... (TODO) to produce a dependency graph. We then compiled the dependency graph into `.dot` to render as `.png` files. These would then be displayed within the editor.
+We read compiled class files with ASM and use Knit internal `InjectionBinder` mechanism to produce a dependency graph. The dependency graph can then be easily traverse using `Graph` class and allow for further analysis.  We then compiled the dependency graph into `.dot` to render as `.png` files. These would then be displayed within the editor.
 
 Given the dependency graph, we can then compute useful features like jumping to the provider of a given `by di` consumer. We can also slice the graph into a subgraph to show the developer a visualization of the relevant dependencies related to the class that is being worked on.
 
