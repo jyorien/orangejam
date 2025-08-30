@@ -1,4 +1,4 @@
-package com.example.orangejam
+package org.orangejam
 
 import com.intellij.openapi.diagnostic.Logger
 import java.nio.file.Files

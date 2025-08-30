@@ -1,5 +1,6 @@
-package com.example.orangejam
+package org.orangejam
 
+import com.example.orangejam.ProjectService
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -7,6 +8,7 @@ import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileVisitor
 
 // look through Gradle modules to look for knit
 object DetectKnit {
@@ -46,7 +48,7 @@ object DetectKnit {
 
     private fun scanRoot(root: VirtualFile): Boolean {
         var found = false
-        VfsUtilCore.visitChildrenRecursively(root, object : com.intellij.openapi.vfs.VirtualFileVisitor<Any>() {
+        VfsUtilCore.visitChildrenRecursively(root, object : VirtualFileVisitor<Any>() {
             override fun visitFile(file: VirtualFile): Boolean {
                 if (found) return false
                 if (!file.isDirectory && file.name in buildFileNames) {

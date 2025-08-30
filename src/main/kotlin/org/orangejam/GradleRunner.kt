@@ -1,4 +1,4 @@
-package com.example.orangejam
+package org.orangejam
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler

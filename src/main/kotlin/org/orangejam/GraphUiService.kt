@@ -1,4 +1,4 @@
-package com.example.orangejam
+package org.orangejam
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project

@@ -1,7 +1,12 @@
-package com.example.orangejam
+package org.orangejam
 
+import com.example.orangejam.ProjectService
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
@@ -11,8 +16,8 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefBrowser
-import org.orangejam.ClasspathGraphRunner
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.FlowLayout
 import java.nio.file.Files
 import javax.swing.*
@@ -30,7 +35,7 @@ class ToolWindowFactory : ToolWindowFactory {
         val status = JBLabel("Knit: detecting…")
         val moduleBox = JComboBox(modules.toTypedArray()).apply {
             renderer = object : DefaultListCellRenderer() {
-                override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): java.awt.Component {
+                override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
                     super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
                     text = (value as? Module)?.name ?: "—"
                     return this
@@ -112,15 +117,15 @@ class ToolWindowFactory : ToolWindowFactory {
                 }
 
                 // Run rendering in a background task (NOT on EDT)
-                com.intellij.openapi.progress.ProgressManager.getInstance().run(
-                    object : com.intellij.openapi.progress.Task.Backgroundable(
+                ProgressManager.getInstance().run(
+                    object : Task.Backgroundable(
                         project, "Rendering Knit Graph for ${m.name}", true
                     ) {
                         // results to report back on EDT in onSuccess()
                         private var svgOk = false
                         private var pngOk = false
 
-                        override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
+                        override fun run(indicator: ProgressIndicator) {
                             indicator.text = "Rendering DOT → SVG/PNG…"
                             val svg = KnitPaths.svgPath(m)
                             val png = KnitPaths.pngPath(m)
@@ -165,7 +170,7 @@ class ToolWindowFactory : ToolWindowFactory {
             selectedModule()?.let { m ->
                 val dot = KnitPaths.dotPath(m)
                 if (Files.isRegularFile(dot)) {
-                    com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project)
+                    FileEditorManager.getInstance(project)
                         .openFile(LocalFileSystem.getInstance().refreshAndFindFileByPath(dot.toString())!!, true)
                 }
             }
@@ -174,7 +179,7 @@ class ToolWindowFactory : ToolWindowFactory {
             selectedModule()?.let { m ->
                 val svg = KnitPaths.svgPath(m)
                 if (Files.isRegularFile(svg)) {
-                    com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project)
+                    FileEditorManager.getInstance(project)
                         .openFile(LocalFileSystem.getInstance().refreshAndFindFileByPath(svg.toString())!!, true)
                 }
             }
@@ -183,7 +188,7 @@ class ToolWindowFactory : ToolWindowFactory {
             selectedModule()?.let { m ->
                 val png = KnitPaths.pngPath(m)
                 if (Files.isRegularFile(png)) {
-                    com.intellij.openapi.fileEditor.FileEditorManager.getInstance(project)
+                    FileEditorManager.getInstance(project)
                         .openFile(LocalFileSystem.getInstance().refreshAndFindFileByPath(png.toString())!!, true)
                 }
             }
