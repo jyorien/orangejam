@@ -183,15 +183,6 @@ fun toDotWithDotlin(dependencyGraph: Graph<Node>): String {
 
     val g = digraph {
         attrs["rankdir"] = "LR"
-        attrs["splines"] = "ortho"
-        attrs["nodesep"] = "0.35"
-        attrs["ranksep"] = "0.6 equally"
-        attrs["concentrate"] = "true"
-        attrs["newrank"] = "true"
-        attrs["compound"] = "true"
-        attrs["pack"] = "true"
-        attrs["packmode"] = "clust"
-
         node  { style = "filled" }
 
         // Group by containerClass for subgraph clusters
