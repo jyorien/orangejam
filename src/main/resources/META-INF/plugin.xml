@@ -29,7 +29,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="MyToolWindow" factoryClass="com.example.orangejam.ToolWindowFactory"/>
+        <toolWindow id="MyToolWindow" factoryClass="org.orangejam.ToolWindowFactory"/>
         <codeInsight.lineMarkerProvider
                 language="kotlin"
                 implementationClass="org.orangejam.AppGutterProvider"/>
@@ -49,7 +49,6 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="org.orangejam.navigation.GraphWarmupActivity"/>
         <codeInsight.lineMarkerProvider language="kotlin" implementationClass="org.orangejam.navigation.DiInjectionLineMarkerProvider"/>
         <findUsagesHandlerFactory id="knit.FindUsages" order="first" implementation="org.orangejam.navigation.DiFindUsagesHandlerFactory"/>
         <codeInsight.lineMarkerProvider language="kotlin" implementationClass="org.orangejam.navigation.DiProviderLineMarkerProvider"/>
