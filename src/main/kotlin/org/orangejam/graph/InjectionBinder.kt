@@ -80,17 +80,12 @@ object InjectionBinder {
                 fieldType, allProvidesForSingleInjection, true,
             )
             val injections = buildInjectionFrom(findingContext)
-//            injectionMap[funcName] = injections.first().getOrNull()!! // FOR testing
-            injectionMap[funcName] = injections.exactSingleInjection(
-                component, fieldType,
-            ) {
-                CPF.all(component, true).map { it.method }
-            }.getOrThrow()
-            injections.exactSingleInjection(
-                component, fieldType,
-            ) {
-                CPF.all(component, true).map { it.method }
-            }.getOrThrow()
+            injectionMap[funcName] = injections.first().getOrNull()!! // FOR testing
+//            injectionMap[funcName] = injections.exactSingleInjection(
+//                component, fieldType,
+//            ) {
+//                CPF.all(component, true).map { it.method }
+//            }.getOrThrow()
         }
         return injectionMap
     }
