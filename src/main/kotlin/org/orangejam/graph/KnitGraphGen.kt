@@ -109,7 +109,7 @@ fun parseDependencyGraph(
     context: GraphContext
 ): Graph<Node> {
     val vertexById = LinkedHashMap<String, Vertex<Node>>()
-    val edges = ArrayList<Edge<Node>>()
+    val edges = HashSet<Edge<Node>>()
     var idx = 0
 
     fun internVertex(node: Node): Vertex<Node> { // Keep one copy of the Vertex
@@ -143,7 +143,7 @@ fun parseDependencyGraph(
             }
 
         }
-        v.injections?.filter { (_, injection) -> injection.from == Injection.From.SELF }?.forEach { (field, injection) ->
+        v.injections?.filter { (_, injection) -> injection.from == Injection.From.SELF || injection.from == Injection.From.GLOBAL }?.forEach { (field, injection) ->
 
             val injectionField = Node.InjectionField(klassName, field)
             val injectionFieldVertex = internVertex(injectionField)
@@ -161,7 +161,8 @@ fun parseDependencyGraph(
                 val providerVertex = internVertex(provider)
 
                 //Link node
-                if(providerVertex != parentVertex)edges += Edge(source = providerVertex, destination = parentVertex)
+                val edge = Edge(source = providerVertex, destination = parentVertex)
+                if(providerVertex != parentVertex && !edges.contains(edge))edges += edge
 
                 q.addAll(injection.requirementInjections.map { providerVertex to it })
             }
@@ -174,13 +175,14 @@ fun parseDependencyGraph(
         v.copy(edges = outgoing[v.index]?.toSet() ?: emptySet())
     }
 
-    return Graph(vertices, edges)
+    return Graph(vertices, edges.toList())
 }
 
 fun toDotWithDotlin(dependencyGraph: Graph<Node>): String {
     var c = 0
 
     val g = digraph {
+        attrs["rankdir"] = "LR"
         node  { style = "filled" }
 
         // Group by containerClass for subgraph clusters
