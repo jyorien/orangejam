@@ -1,18 +1,25 @@
 package org.orangejam
 
 import com.example.orangejam.GradleRunner
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import org.orangejam.graph.getContext
 import org.orangejam.graph.parseDependencyGraph
 import org.orangejam.graph.toDotWithDotlin
+import org.orangejam.services.GraphCacheService
+import org.orangejam.services.GraphIndexService
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import com.intellij.openapi.startup.StartupManager
+import com.intellij.openapi.vfs.VfsUtil
 
 object ClasspathGraphRunner {
     private val log = Logger.getInstance(ClasspathGraphRunner::class.java)
@@ -55,6 +62,18 @@ object ClasspathGraphRunner {
                     val dot = toDotWithDotlin(dependencyGraph)
                     val dotPath = outDir.resolve("graph.dot")
                     Files.writeString(dotPath, dot)
+
+                    StartupManager.getInstance(project).runAfterOpened {
+                        // Asynchronous refresh (no progress window)
+                        VfsUtil.markDirtyAndRefresh(false, /* async */ true, /* recursive */ true, outDir.toFile())
+                        // Nudge markers after refresh is scheduled
+                        ApplicationManager.getApplication().invokeLater {
+                            if (!project.isDisposed) {
+                                DaemonCodeAnalyzer.getInstance(project).restart()
+                            }
+                        }
+                    }
+
                     onFinished(if (Files.isRegularFile(dotPath)) dotPath else null)
                 } catch (t: Throwable) {
                     log.warn("GraphGen failed", t)
