@@ -1,19 +1,32 @@
 package com.example.orangejam
-
+import java.io.File
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.pom.Navigatable
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiClass
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefJSQuery
+import com.intellij.util.concurrency.AppExecutorUtil
+
 import org.orangejam.ClasspathGraphRunner
 import java.awt.BorderLayout
+import java.awt.Desktop
 import java.awt.FlowLayout
+import java.net.URI
 import java.nio.file.Files
 import javax.swing.*
 
@@ -25,7 +38,35 @@ class ToolWindowFactory : ToolWindowFactory {
 
         val modules: List<Module> = projectSvc?.knitModules().orEmpty()
         val browser = JBCefBrowser()
+        val query = JBCefJSQuery.create(browser)
+        // this handler opens the file based on the given FQCN
+        query.addHandler { fqClassName ->
+            println("Loading: $fqClassName")
+            DumbService.getInstance(project).smartInvokeLater {
+                ReadAction.nonBlocking<Pair<Navigatable?, String?>> {
+                    val parts = fqClassName.split("$")
+                    val className = parts[0]
+                    val methodName = parts.getOrNull(1)
 
+                    val psiClass = JavaPsiFacade.getInstance(project)
+                        .findClass(className, GlobalSearchScope.allScope(project))
+
+                    val target = if (methodName != null && psiClass != null) {
+                        psiClass.findMethodsByName(methodName, false).firstOrNull()
+                    } else {
+                        psiClass
+                    }
+
+                    target as? Navigatable to methodName
+                }.finishOnUiThread(ModalityState.defaultModalityState()) { (target, methodName) ->
+                    if (target != null) {
+                        println("Navigating to ${methodName ?: "class"}")
+                        target.navigate(true)
+                    }
+                }.submit(AppExecutorUtil.getAppExecutorService())
+            }
+            null
+        }
         val top = JPanel(FlowLayout(FlowLayout.LEFT))
         val status = JBLabel("Knit: detecting…")
         val moduleBox = JComboBox(modules.toTypedArray()).apply {
@@ -69,7 +110,41 @@ class ToolWindowFactory : ToolWindowFactory {
             val svg = KnitPaths.svgPath(m)
             if (Files.isRegularFile(svg)) {
                 LocalFileSystem.getInstance().refreshAndFindFileByPath(svg.toString())?.refresh(false, false)
-                browser.loadURL(VfsUtil.pathToUrl(svg.toString()))
+                val svgStr = File(svg.toString()).readText()
+                println("raw svg: $svgStr")
+                val fqcnMatches = Regex("""<title>(knit/demo/[^<]+)</title>""").findAll(svgStr).toList()
+                var patchedSvg = svgStr
+                for (match in fqcnMatches) {
+                    val fqcnRaw = match.groupValues[1]
+                    val fqcn = fqcnRaw.replace('/', '.')
+                    val injected = """<ellipse onclick="callQuery('$fqcn')" data-fqcn="$fqcn""""
+
+                    // Replace the *first* <ellipse ...> that follows this <title> tag
+                    // (We use a simple index trick to do it only once per match)
+                    val indexAfterTitle = patchedSvg.indexOf(match.value) + match.value.length
+                    val nextEllipseIndex = patchedSvg.indexOf("<ellipse", startIndex = indexAfterTitle)
+                    if (nextEllipseIndex != -1) {
+                        val endOfTag = patchedSvg.indexOf(">", startIndex = nextEllipseIndex)
+                        val ellipseTag = patchedSvg.substring(nextEllipseIndex, endOfTag)
+                        val newEllipseTag = ellipseTag.replace("<ellipse", injected)
+                        patchedSvg = patchedSvg.replaceRange(nextEllipseIndex, endOfTag, newEllipseTag)
+                    }
+                }
+                println("patched svg: $patchedSvg")
+                val html = """
+                    <html>
+                      <body>
+                        $patchedSvg
+                        <script>
+                          function callQuery(fqcn) {
+                            ${query.inject("fqcn")}
+                          }
+                        </script>
+                      </body>
+                    </html>
+                    """.trimIndent()
+                println("html: $html")
+                browser.loadHTML(html)
                 status.text = "Loaded ${svg.fileName}"
             } else {
                 browser.loadHTML("<html><body style='font:13px sans-serif;padding:12px'>No graph yet for <b>${m.name}</b>. Click <i>Generate</i>.</body></html>")
