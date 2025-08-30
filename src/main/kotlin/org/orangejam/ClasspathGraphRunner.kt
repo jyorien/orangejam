@@ -1,6 +1,6 @@
 package org.orangejam
 
-import com.example.orangejam.GradleRunner
+import org.orangejam.GradleRunner
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger

@@ -1,6 +1,6 @@
 package org.orangejam
 
-import com.example.orangejam.GraphRenderer
+import org.orangejam.GraphRenderer
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
