@@ -1,6 +1,5 @@
 package org.orangejam
 
-import com.example.orangejam.GradleRunner
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.ProgressIndicator

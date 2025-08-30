@@ -1,6 +1,5 @@
 package org.orangejam
 
-import com.example.orangejam.KnitPaths
 import com.intellij.openapi.module.Module
 import java.nio.file.Files
 import java.nio.file.Path

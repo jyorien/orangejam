@@ -8,6 +8,7 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import org.jetbrains.plugins.gradle.util.GradleConstants
+import org.orangejam.DetectKnit
 
 @Service(Service.Level.PROJECT)
 class ProjectService(private val project: Project) {

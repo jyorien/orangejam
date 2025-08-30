@@ -1,4 +1,4 @@
-package com.example.orangejam
+package org.orangejam
 
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -8,11 +8,11 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.ModuleUtil
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.LocalFileSystem
-import org.orangejam.ClasspathGraphRunner
 import java.nio.file.Files
 
 class DepGraphContextAction : AnAction() {
@@ -43,7 +43,7 @@ class DepGraphContextAction : AnAction() {
         val module = ModuleUtil.findModuleForFile(file, project) ?: return
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating Dependency Graph for ${module.name}", true) {
-            override fun run(indicator: com.intellij.openapi.progress.ProgressIndicator) {
+            override fun run(indicator: ProgressIndicator) {
                 val outDir = KnitPaths.moduleBuildDir(module).resolve("knit-graph")
                 // build -> graphgen -> render -> open in new tab
                 ClasspathGraphRunner.generate(project, module, outDir) { dotPath ->

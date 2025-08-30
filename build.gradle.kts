@@ -34,7 +34,8 @@ dependencies {
         bundledPlugin("org.jetbrains.plugins.gradle")
 
         // Add necessary plugin dependencies for compilation here, example:
-        // bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.kotlin")
     }
 }
 
